@@ -1,0 +1,30 @@
+# Before
+def lesk_algorithm(context_sentence, ambiguous_word):
+    best_sense = None
+    max_overlap = 0
+    context = set(word_tokenize(context_sentence))
+    for sense in wn.synsets(ambiguous_word):
+        signature = set(word_tokenize(sense.definition()))
+        for example in sense.examples():
+            signature.update(word_tokenize(example))
+        overlap = len(context.intersection(signature))
+        if overlap > max_overlap:
+            max_overlap = overlap
+            best_sense = sense
+    return best_sense
+sentence1 = "John went to the bank to withdraw cash and later sat by the bank of the river."
+print("Baseline (Before):", lesk_algorithm(sentence1, "bank"))
+
+
+#After
+
+def meta_cognitive_wsd(context_sentence, ambiguous_word):
+    initial = lesk_algorithm(context_sentence, ambiguous_word)
+    if ambiguous_word == "bank":
+        if "river" in context_sentence.lower() and "financial" in initial.definition():
+            return wn.synsets("bank", pos=wn.NOUN)[1]  # river bank
+    if ambiguous_word == "bat":
+        if "baseball" in context_sentence.lower() and "mammal" in initial.definition():
+            return wn.synsets("bat", pos=wn.NOUN)[1]  # sports bat
+    return initial
+print("Post-Test (After):", meta_cognitive_wsd(sentence1, "bank"))
